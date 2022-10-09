@@ -13,7 +13,7 @@ include(pico_sdk_import.cmake)
 project(rp2040-scating-speedometer C CXX ASM)
 
 # Initialise the Raspberry Pi Pico SDK
-set(PICO_BOARD sparkfun_promicro)
+set(PICO_BOARD pimoroni_tiny2040)
 pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
@@ -60,6 +60,7 @@ target_link_libraries(rp2040-scating-speedometer
         hardware_timer
         hardware_watchdog
         hardware_clocks
+        hardware_uart
         )
 
 target_include_directories(rp2040-scating-speedometer PRIVATE
