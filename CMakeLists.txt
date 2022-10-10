@@ -20,6 +20,7 @@ pico_sdk_init()
 
 add_executable(rp2040-scating-speedometer
         src/main.c
+        src/font.h
 #        src/msc_disk.c
 #        src/usb_descriptors.c
 #        src/tusb_config.h
