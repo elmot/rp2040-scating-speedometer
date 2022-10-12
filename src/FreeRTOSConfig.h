@@ -133,11 +133,7 @@ to exclude the API function. */
 #define INCLUDE_xTaskResumeFromISR              1
 #define INCLUDE_xQueueGetMutexHolder            1
 
-
-//#define vPortSVCHandler SVC_Handler
-//#define xPortPendSVHandler PendSV_Handler
-//#define xPortSysTickHandler SysTick_Handler
 /* A header file that defines trace macro can be included here. */
-
+#define configUSE_TASK_NOTIFICATIONS            1
 #endif /* FREERTOS_CONFIG_H */
 

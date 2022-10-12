@@ -31,41 +31,50 @@ static inline void initLeds() {
     gpio_put(TINY2040_LED_B_PIN, false);
 }
 
-#define CDC_STACK_SIZE      configMINIMAL_STACK_SIZE
-StackType_t led_stack[CDC_STACK_SIZE];
+StackType_t led_stack[configMINIMAL_STACK_SIZE];
 StaticTask_t led_taskdef;
+TaskHandle_t ledTaskHandle;
 
-_Noreturn void led_task(void *params) {
+StackType_t speed_stack[configMINIMAL_STACK_SIZE];
+StaticTask_t speed_taskdef;
+
+#define BUFF_LEN (256)
+
+_Noreturn void speed_task(void *params) {
     (void) params;
-    writeSpeed(36);
-    char buff[100];
+    static char buff[BUFF_LEN];
     int idx = 0;
-    int speed = 0;
-    while (1) {
+    while (true) {
         int c = uart_getc(UART_ID);
-        if (c == 13) {
+        if (c == 13 || c == 10) {
             buff[idx] = 0;
-            puts(buff);
+            if(idx > 0) {
+                struct GpsInfo gpsInfo = parseNmea(buff);
+                if(gpsInfo.parsed) {
+                    char buffOut[100];
+                    snprintf(buffOut,100,"Speed: %f\r\n", gpsInfo.speedKts * 1.852); //todo remove
+                    puts(buffOut);//todo remove
+                }
+            }
             idx = 0;
         } else {
             buff[idx] = c;
-            idx = (idx + 98) % 99;
+            idx = (idx + 1) % BUFF_LEN;
         }
-        vTaskDelay(500);
-        writeSpeed(speed);
-        speed = (speed + 1) % 30;
     }
 }
-
 
 /*------------- MAIN -------------*/
 int main(void) {
     board_init();
-    initPanel();
     initUart();
     initLeds();
 
-    (void) xTaskCreateStatic(led_task, "cdc", CDC_STACK_SIZE, NULL, configMAX_PRIORITIES - 2, led_stack, &led_taskdef);
+    ledTaskHandle = xTaskCreateStatic(led_task, "led", configMINIMAL_STACK_SIZE, NULL, configMAX_PRIORITIES - 2,
+                                      led_stack, &led_taskdef);
+    xTaskCreateStatic(speed_task, "speed", configMINIMAL_STACK_SIZE, NULL, configMAX_PRIORITIES - 2,
+                      speed_stack, &speed_taskdef);
+
 
     vTaskStartScheduler();
 

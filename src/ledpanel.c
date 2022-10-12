@@ -196,7 +196,7 @@ static void writeDigits(uint8_t leadDigit, uint8_t tailDigit, uint32_t color, ui
 
 }
 
-void writeSpeed(int kmh) {
+void writeSpeed(unsigned int kmh) {
     if (kmh < 3) {
         for (int i = 0; i < (256 + 36) / 37; ++i) {
             for (int j = 0; j < 36; ++j) {
@@ -219,3 +219,12 @@ void writeSpeed(int kmh) {
 
 }
 
+_Noreturn void led_task(void *params) {
+    (void) params;
+    initPanel();
+    while (1) {
+        uint32_t speed;
+        xTaskNotifyWait(0, 0, &speed, 0xFFFFFFFF);
+        writeSpeed(/*speed todo resore*/ 1);
+    }
+}
