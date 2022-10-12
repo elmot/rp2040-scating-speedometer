@@ -10,7 +10,7 @@
 #include "hardware/uart.h"
 #include "hardware/pio.h"
 
-void writeSpeed(int kmh);
+void writeSpeed(unsigned int kmh);
 void initPanel();
 
 #endif //RP2040_SKATING_SPEEDOMETER_MAIN_H

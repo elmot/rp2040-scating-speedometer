@@ -196,7 +196,7 @@ static void writeDigits(uint8_t leadDigit, uint8_t tailDigit, uint32_t color, ui
 
 }
 
-void writeSpeed(int kmh) {
+void writeSpeed(unsigned int kmh) {
     if (kmh < 3) {
         for (int i = 0; i < (256 + 36) / 37; ++i) {
             for (int j = 0; j < 36; ++j) {
