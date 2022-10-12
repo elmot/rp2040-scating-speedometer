@@ -1,5 +1,4 @@
 #include "main.h"
-
 //--------------------------------------------------------------------+
 // MACRO CONSTANT TYPEDEF PROTYPES
 //--------------------------------------------------------------------+
@@ -32,16 +31,12 @@ static inline void initLeds() {
     gpio_put(TINY2040_LED_B_PIN, false);
 }
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "EndlessLoop"
+#define CDC_STACK_SIZE      configMINIMAL_STACK_SIZE
+StackType_t led_stack[CDC_STACK_SIZE];
+StaticTask_t led_taskdef;
 
-/*------------- MAIN -------------*/
-int main(void) {
-    board_init();
-    initPanel();
-    initUart();
-    initLeds();
-//    put_pixel(COLOR_MODERATE);
+_Noreturn void led_task(void *params) {
+    (void) params;
     writeSpeed(36);
     char buff[100];
     int idx = 0;
@@ -54,16 +49,28 @@ int main(void) {
             idx = 0;
         } else {
             buff[idx] = c;
-            idx = (idx + 1) % 99;
+            idx = (idx + 98) % 99;
         }
-        sleep_ms(500);
+        vTaskDelay(500);
         writeSpeed(speed);
         speed = (speed + 1) % 30;
     }
+}
+
+
+/*------------- MAIN -------------*/
+int main(void) {
+    board_init();
+    initPanel();
+    initUart();
+    initLeds();
+
+    (void) xTaskCreateStatic(led_task, "cdc", CDC_STACK_SIZE, NULL, configMAX_PRIORITIES - 2, led_stack, &led_taskdef);
+
+    vTaskStartScheduler();
 
 }
 
-#pragma clang diagnostic pop
 
 //--------------------------------------------------------------------+
 // Device callbacks
