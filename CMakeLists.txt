@@ -9,6 +9,7 @@ set(PICO_SDK_PATH "D:/work/tests/rp2040/pico-sdk")
 
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
+include(FreeRTOS_Kernel_import.cmake)
 
 project(rp2040-skating-speedometer C CXX ASM)
 
@@ -21,6 +22,7 @@ pico_sdk_init()
 add_executable(rp2040-skating-speedometer
         src/main.c
         src/ledpanel.c
+        src/freertos_hooks.c
 #        src/msc_disk.c
 #        src/usb_descriptors.c
 #        src/tusb_config.h
@@ -31,6 +33,7 @@ pico_set_program_name(rp2040-skating-speedometer "rp2040-skating-speedometer")
 pico_set_program_version(rp2040-skating-speedometer "0.1")
 pico_generate_pio_header(rp2040-skating-speedometer ${CMAKE_SOURCE_DIR}/src/ws2812.pio OUTPUT_DIR ${CMAKE_SOURCE_DIR}/src/generated)
 
+target_sources(rp2040-skating-speedometer PRIVATE ${FreeRTOS-Kernel_SOURCE_DIR}/idle_task_static_memory.c)
 # Add the standard library to the build
 target_link_libraries(rp2040-skating-speedometer pico_stdlib)
 
@@ -57,11 +60,13 @@ target_sources(rp2040-skating-speedometer PRIVATE
 
 # Add any user requested libraries
 target_link_libraries(rp2040-skating-speedometer
+        pico_stdlib
         hardware_pio
         hardware_timer
         hardware_watchdog
         hardware_clocks
         hardware_uart
+        FreeRTOS-Kernel
         )
 
 target_include_directories(rp2040-skating-speedometer PRIVATE
