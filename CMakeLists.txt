@@ -21,7 +21,7 @@ pico_sdk_init()
 
 add_executable(rp2040-skating-speedometer
         src/main.c
-        src/nmea.c
+        src/speed.c
         src/ledpanel.c
         src/freertos_hooks.c
 #        src/msc_disk.c

@@ -54,16 +54,22 @@ eg3. $GPRMC,220516,A,5133.82,N,00042.24,W,173.8,231.8,130694,004.2,W*70
 11   = E or W
 12   = Checksum
  */
+struct GpsData_t gpsData;
+volatile struct GpsData_t gpsDataXchange;
 
 static double parseCoord(char *ptr, char **endPtr, char validPositive, char validNegative) {
+    if(*ptr == ',') {
+        *endPtr = ptr+1;
+        return HUGE_VAL;
+    }
     unsigned long coordDeg = strtoul(ptr, &ptr, 10);
     if (coordDeg == ULONG_MAX) return NAN;
     if (*(ptr) != '.') return NAN;
-    double coordMin = strtod(ptr-2, &ptr);
-    if(coordMin == HUGE_VAL || coordMin == -HUGE_VAL ) return NAN;
+    double coordMin = strtod(ptr - 2, &ptr);
+    if (coordMin == HUGE_VAL || coordMin == -HUGE_VAL) return NAN;
     if (*(ptr++) != ',') return NAN;
     double result = (coordDeg / 100)  // NOLINT(bugprone-integer-division)
-                    + coordMin  / 60.0;
+                    + coordMin / 60.0;
     if (*ptr == validNegative) {
         result = -result;
     } else if (*ptr != validPositive) {
@@ -74,42 +80,72 @@ static double parseCoord(char *ptr, char **endPtr, char validPositive, char vali
     return result;
 }
 
-struct GpsInfo parseNmea(char *buf) {
-    struct GpsInfo result = {.parsed = false, .validTime = false, .valid = false};
+void parseNmea(char *buf) {
+    gpsData.parsed = false;
+    gpsData.validTime = false;
+    gpsData.valid = false;
     if (strncmp(buf, "$GPRMC,", 7) != 0) {
-        return result;
+        return;
     }
     char *ptr = buf + 7;
     unsigned long dateLong = strtoul(ptr, &ptr, 10);
     if (dateLong == 0 || dateLong == ULONG_MAX) {
-        return result;
+        gpsData.parsed = true;
+        return;
     };
-    result.hour = dateLong / 10000;//todo timezone + dst
-    result.minute = (dateLong / 100) % 100;
-    result.validTime = true;
-    if ((ptr = strchr(ptr, ',')) == NULL) return result;
+    gpsData.hour = dateLong / 10000;//todo timezone + dst
+    gpsData.minute = (dateLong / 100) % 100;
+    gpsData.validTime = true;
+    if ((ptr = strchr(ptr, ',')) == NULL) return;
     switch (ptr[1]) {
         case 'A':
-            result.valid = true;
+            gpsData.valid = true;
             break;
         case 'V':
-            result.valid = false;
+            gpsData.valid = false;
             break;
         default:
-            return result;
+            return;
     }
-    result.lat = parseCoord(ptr + 3, &ptr, 'N', 'S');
-    if (isnan(result.lat)) {
-        return result;
+    gpsData.lat = parseCoord(ptr + 3, &ptr, 'N', 'S');
+    if (isnan(gpsData.lat)) {
+        return;
     }
-    result.lon = parseCoord(ptr, &ptr, 'E', 'W');
-    if (isnan(result.lon)) {
-        return result;
+    gpsData.lon = parseCoord(ptr, &ptr, 'E', 'W');
+    if (isnan(gpsData.lon)) {
+        return;
     }
-    result.speedKts = strtod(ptr, &ptr);
-    if (result.speedKts == HUGE_VAL || result.speedKts == -HUGE_VAL) {
-        return result;
+    gpsData.speedKts = strtod(ptr, &ptr);
+    if (gpsData.speedKts == HUGE_VAL || gpsData.speedKts == -HUGE_VAL) {
+        return;
     }
-    result.parsed = true;
-    return result;
+    gpsData.parsed = true;
+}
+
+#define BUFF_LEN (256)
+
+_Noreturn void speed_task(void *params) {
+    (void) params;
+    static char buff[BUFF_LEN];
+    int idx = 0;
+    while (true) {
+        int c = uart_getc(UART_ID);
+        if (c == 13 || c == 10) {
+            buff[idx] = 0;
+            if (idx > 0) {
+                parseNmea(buff);
+                if (gpsData.parsed) {
+                    if(xSemaphoreTake(gpsDataMutex, 5000)) {
+                        gpsDataXchange = gpsData;
+                        xSemaphoreGive(gpsDataMutex);
+                        xTaskNotify(ledTaskHandle, 0, eNoAction);
+                    }
+                }
+            }
+            idx = 0;
+        } else {
+            buff[idx] = c;
+            idx = (idx + 1) % BUFF_LEN;
+        }
+    }
 }
