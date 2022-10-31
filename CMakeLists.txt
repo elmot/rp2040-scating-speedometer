@@ -66,6 +66,7 @@ target_link_libraries(rp2040-skating-speedometer
         hardware_timer
         hardware_watchdog
         hardware_clocks
+        hardware_dma
         hardware_uart
         FreeRTOS-Kernel
         )

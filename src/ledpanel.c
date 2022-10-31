@@ -1,9 +1,13 @@
 #include "main.h"
+#include "hardware/dma.h"
 #include "generated/ws2812.pio.h"
 
 #define WS2812_STATE_MACHINE 0
 #define WS2812_PIO pio0
 #define WS2812_PIN 26
+
+#define DMA_CHANNEL 0
+#define DMA_CHANNEL_MASK (1u << DMA_CHANNEL)
 
 #define CHAR_WIDTH 8
 #define KMH_WIDTH 13
@@ -136,25 +140,62 @@ enum { //GRB
     COLOR_FAST_DARK = 0x023F02,
 };
 
-static inline void put_pixel(uint32_t pixel_grb) {
-    pio_sm_put_blocking(pio0, WS2812_STATE_MACHINE, pixel_grb << 8u);
+#define PIX_BUFFER_SIZE (8 * 32)
+static uint32_t pixBuffer[PIX_BUFFER_SIZE];
+static uint_fast16_t pixelIndex = 0;
+
+
+//todo verify all and use
+void initDma() {
+    dma_claim_mask(DMA_CHANNEL_MASK);
+
+    dma_channel_config channel_config = dma_channel_get_default_config(DMA_CHANNEL);
+    channel_config_set_dreq(&channel_config, pio_get_dreq(WS2812_PIO, WS2812_STATE_MACHINE, true));
+    channel_config_set_irq_quiet(&channel_config, true);
+    dma_channel_configure(DMA_CHANNEL,
+                          &channel_config,
+                          &WS2812_PIO->txf[WS2812_STATE_MACHINE],
+                          pixBuffer,
+                          PIX_BUFFER_SIZE,
+                          false);
 }
 
 
-static bool oddColumn = false;
+
+static inline void clearFrame() {
+    memset(pixBuffer, 0, PIX_BUFFER_SIZE * sizeof (uint32_t));
+    pixelIndex = 9;
+}
+
+static inline void showFrame() {
+    sleep_ms(10);
+    dma_channel_transfer_from_buffer_now(DMA_CHANNEL, pixBuffer, PIX_BUFFER_SIZE);
+}
+
+/* todo uncomment
+static inline void savePixel(int x, int y, uint32_t color) {
+    int idx =
+}
+
+*/
+static inline void put_pixel(uint32_t pixel_grb) {
+    pixBuffer[pixelIndex++] = pixel_grb << 8;
+}
+
+
 
 void initPanel() {
     uint offset = pio_add_program(WS2812_PIO, &ws2812_program);
     ws2812_program_init(WS2812_PIO, WS2812_STATE_MACHINE, offset, WS2812_PIN, 800000, false);
-    for (int i = 0; i < 32 * 8; i++) {
-        put_pixel(0);
-    }
-    sleep_ms(10);
+    clearFrame();
+    initDma();
+    showFrame();
 }
 
+static bool oddColumn = false;//todo remove
 static inline void writeBlankColumn() {
     for (int i = 0; i < 8; ++i) {
-        put_pixel(0);
+        put_pixel(0);//todo DMA
     }
     oddColumn = !oddColumn;
 }
@@ -167,10 +208,11 @@ static inline void writeColumn(uint8_t data, uint32_t color) {
         } else {
             pixValue = data & (1 << (7 - i));
         }
-        put_pixel(pixValue ? color : 0);
+        put_pixel(pixValue ? color : 0); //todo DMA
     }
     oddColumn = !oddColumn;
 }
+
 
 
 static void writeDigits(uint8_t leadDigit, uint8_t tailDigit, uint32_t color, uint32_t kmhColor) {
@@ -193,16 +235,17 @@ static void writeDigits(uint8_t leadDigit, uint8_t tailDigit, uint32_t color, ui
     for (int i = 0; i < KMH_WIDTH; ++i) {
         writeColumn(kmh_sign[i], kmhColor);
     }
-
 }
 
 void writeSpeed(unsigned int kmh) {
+    kmh = 10;
+    clearFrame();
     if (kmh < 3) {
         for (int i = 0; i < (256 + 36) / 37; ++i) {
             for (int j = 0; j < 36; ++j) {
-                put_pixel(0);
+                put_pixel(0); //todo DMA
             }
-            put_pixel(COLOR_STALL);
+            put_pixel(COLOR_STALL);//todo DMA
         }
     } else {
         uint32_t color = COLOR_FAST;
@@ -216,15 +259,18 @@ void writeSpeed(unsigned int kmh) {
         }
         writeDigits((kmh / 10) % 10, kmh % 10, color, kmhColor);
     }
-
+    showFrame();
 }
 
 _Noreturn void led_task(void *params) {
     (void) params;
     initPanel();
     while (1) {
-        uint32_t speed;
-        xTaskNotifyWait(0, 0, &speed, 0xFFFFFFFF);
-        writeSpeed(/*speed todo resore*/ 1);
+        xTaskNotifyWait(0, 0, NULL, 0xFFFFFFFF);
+        if(xSemaphoreTake(gpsDataMutex, 5000)) {
+
+            writeSpeed(gpsDataXchange.speedKts * 10.0 /*remove*/ + 0.5 );
+            xSemaphoreGive(gpsDataMutex);
+        }
     }
 }

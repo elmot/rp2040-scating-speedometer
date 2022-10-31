@@ -19,7 +19,7 @@ void initPanel();
 _Noreturn void led_task(void *params);
 _Noreturn void speed_task(void *params);
 
-volatile struct GpsData_t {
+typedef volatile struct{
     bool parsed;
     bool validTime;
     bool valid;
@@ -28,10 +28,10 @@ volatile struct GpsData_t {
     double speedKts;
     double lat;
     double lon;
-};
+}  GpsData_t;
 
 extern SemaphoreHandle_t gpsDataMutex;
-extern volatile struct GpsData_t gpsDataXchange;
+extern volatile GpsData_t gpsDataXchange;
 extern TaskHandle_t ledTaskHandle;
 
 

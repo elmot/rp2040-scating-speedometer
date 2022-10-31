@@ -54,8 +54,8 @@ eg3. $GPRMC,220516,A,5133.82,N,00042.24,W,173.8,231.8,130694,004.2,W*70
 11   = E or W
 12   = Checksum
  */
-struct GpsData_t gpsData;
-volatile struct GpsData_t gpsDataXchange;
+GpsData_t gpsData;
+volatile GpsData_t gpsDataXchange;
 
 static double parseCoord(char *ptr, char **endPtr, char validPositive, char validNegative) {
     if(*ptr == ',') {
