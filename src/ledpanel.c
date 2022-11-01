@@ -9,124 +9,117 @@
 #define DMA_CHANNEL 0
 #define DMA_CHANNEL_MASK (1u << DMA_CHANNEL)
 
-#define CHAR_WIDTH 8
-#define KMH_WIDTH 13
-static const uint8_t font8x8_0_9[10][CHAR_WIDTH] =
+const uint8_t font8x8_0_9[10][8] =
         {{
                  0b01111110,
-                 0b11111111,
-                 0b10000001,
-                 0b10000001,
-                 0b10000001,
-                 0b10000001,
-                 0b11111111,
-                 0b01111110
+                 0b11000011,
+                 0b11000011,
+                 0b11000011,
+                 0b11000011,
+                 0b11000011,
+                 0b11000011,
+                 0b01111110,
          },
          {
-                 0b00000000,
-                 0b00010000,
-                 0b00100000,
-                 0b01000000,
-                 0b11111111,
-                 0b11111111,
-                 0b00000000,
-                 0b00000000
-         },
-         {
-                 0b01000011,
-                 0b11000111,
-                 0b10001101,
-                 0b10001001,
-                 0b10001001,
-                 0b10011001,
-                 0b11110001,
-                 0b01100001
-         },
-         {
-                 0b01000010,
-                 0b10000001,
-                 0b10010001,
-                 0b10010001,
-                 0b10010001,
-                 0b10010001,
-                 0b11111111,
-                 0b01101110
-         },
-         {
-                 0b00001000,
-                 0b00011000,
-                 0b00111000,
-                 0b01101000,
-                 0b11001000,
-                 0b11111111,
-                 0b11111111,
-                 0b00001000
-         },
-         {
-                 0b11110010,
-                 0b11110011,
-                 0b10010001,
-                 0b10010001,
-                 0b10010001,
-                 0b10010001,
-                 0b10011111,
-                 0b10001110
+                 0b00001100,
+                 0b00011100,
+                 0b00101100,
+                 0b01001100,
+                 0b00001100,
+                 0b00001100,
+                 0b00001100,
+                 0b00001100,
          },
          {
                  0b01111110,
+                 0b11000011,
+                 0b00000011,
+                 0b00000110,
+                 0b00111100,
+                 0b01100000,
+                 0b11000000,
                  0b11111111,
-                 0b10010001,
-                 0b10010001,
-                 0b10010001,
-                 0b10010001,
-                 0b11011111,
-                 0b01001110
          },
          {
-                 0b10000000,
+                 0b01111110,
                  0b10000011,
-                 0b10000111,
-                 0b10001100,
-                 0b10011000,
-                 0b10110000,
-                 0b11100000,
-                 0b11000000
+                 0b00000011,
+                 0b00111110,
+                 0b00000011,
+                 0b00000011,
+                 0b10000011,
+                 0b01111110,
          },
          {
-                 0b01101110,
+                 0b00001110,
+                 0b00011110,
+                 0b00110110,
+                 0b01100110,
                  0b11111111,
-                 0b10010001,
-                 0b10010001,
-                 0b10010001,
-                 0b10010001,
-                 0b11111111,
-                 0b01101110
+                 0b00000110,
+                 0b00000110,
+                 0b00000110,
          },
          {
-                 0b01100010,
-                 0b11110011,
-                 0b10010001,
-                 0b10010001,
-                 0b10010001,
-                 0b10010001,
                  0b11111111,
-                 0b01111110
+                 0b11000000,
+                 0b11000000,
+                 0b11111110,
+                 0b00000011,
+                 0b00000011,
+                 0b11000011,
+                 0b01111110,
+         },
+         {
+                 0b01111110,
+                 0b11000011,
+                 0b11000000,
+                 0b11111110,
+                 0b11000011,
+                 0b11000011,
+                 0b11000011,
+                 0b01111110,
+         },
+         {
+                 0b11111111,
+                 0b00000011,
+                 0b00000110,
+                 0b00001100,
+                 0b00011000,
+                 0b00110000,
+                 0b01100000,
+                 0b01100000,
+         },
+         {
+                 0b01111110,
+                 0b11000011,
+                 0b11000011,
+                 0b01111110,
+                 0b11000011,
+                 0b11000011,
+                 0b11000011,
+                 0b01111110,
+         },
+         {
+                 0b01111110,
+                 0b11000011,
+                 0b11000011,
+                 0b01111111,
+                 0b00000011,
+                 0b00000011,
+                 0b11000011,
+                 0b01111110,
          }};
 
-const uint8_t kmh_sign[KMH_WIDTH] = {
-        0b01111111,
-        0b00001100,
-        0b00010011,
-        0b00000000,
-        0b00011111,
-        0b00010000,
-        0b00011111,
-        0b00010000,
-        0b00001111,
-        0b00000000,
-        0b01111111,
-        0b00010000,
-        0b00001111
+const uint32_t kmh13x8[8] = {
+        0b0000000000000,
+        0b1000000000100,
+        0b1000000000100,
+        0b1010111100110,
+        0b1100101010101,
+        0b1100101010101,
+        0b1010101010101,
+        0b1010101010101,
 };
 enum { //GRB
     COLOR_WAIT_SATELLITE = 0x008060,
@@ -142,10 +135,7 @@ enum { //GRB
 
 #define PIX_BUFFER_SIZE (8 * 32)
 static uint32_t pixBuffer[PIX_BUFFER_SIZE];
-static uint_fast16_t pixelIndex = 0;
 
-
-//todo verify all and use
 void initDma() {
     dma_claim_mask(DMA_CHANNEL_MASK);
 
@@ -161,10 +151,8 @@ void initDma() {
 }
 
 
-
 static inline void clearFrame() {
-    memset(pixBuffer, 0, PIX_BUFFER_SIZE * sizeof (uint32_t));
-    pixelIndex = 9;
+    memset(pixBuffer, 0, PIX_BUFFER_SIZE * sizeof(uint32_t));
 }
 
 static inline void showFrame() {
@@ -172,16 +160,18 @@ static inline void showFrame() {
     dma_channel_transfer_from_buffer_now(DMA_CHANNEL, pixBuffer, PIX_BUFFER_SIZE);
 }
 
-/* todo uncomment
 static inline void savePixel(int x, int y, uint32_t color) {
-    int idx =
+    unsigned int idx;
+    if (x & 1) {
+        idx = 7 + (x * 8) - y;
+    } else {
+        idx = x * 8 + y;
+    }
+    assert(idx < PIX_BUFFER_SIZE);
+    if (idx < PIX_BUFFER_SIZE) {
+        pixBuffer[idx] = color << 8;
+    }
 }
-
-*/
-static inline void put_pixel(uint32_t pixel_grb) {
-    pixBuffer[pixelIndex++] = pixel_grb << 8;
-}
-
 
 
 void initPanel() {
@@ -192,61 +182,24 @@ void initPanel() {
     showFrame();
 }
 
-static bool oddColumn = false;//todo remove
-static inline void writeBlankColumn() {
-    for (int i = 0; i < 8; ++i) {
-        put_pixel(0);//todo DMA
-    }
-    oddColumn = !oddColumn;
-}
-
-static inline void writeColumn(uint8_t data, uint32_t color) {
-    for (int i = 0; i < 8; ++i) {
-        bool pixValue;
-        if (oddColumn) {
-            pixValue = data & (1 << i);
-        } else {
-            pixValue = data & (1 << (7 - i));
+static void writeDigit(uint8_t x, uint8_t digit, uint32_t color) {
+    for (int i = 0, mask = 0x80; i < 8; ++i, mask >>= 1) {
+        for (int j = 0; j < 8; ++j) {
+            if (font8x8_0_9[digit][j] & mask)
+                savePixel(x + i, j, color);
         }
-        put_pixel(pixValue ? color : 0); //todo DMA
-    }
-    oddColumn = !oddColumn;
-}
-
-
-
-static void writeDigits(uint8_t leadDigit, uint8_t tailDigit, uint32_t color, uint32_t kmhColor) {
-    oddColumn = false;
-    if (leadDigit == 0) {
-        for (int i = 0; i < CHAR_WIDTH; ++i) {
-            writeBlankColumn();
-        }
-    } else {
-        for (int i = 0; i < CHAR_WIDTH; ++i) {
-            writeColumn(font8x8_0_9[leadDigit][i], color);
-        }
-    }
-    writeBlankColumn();
-    for (int i = 0; i < CHAR_WIDTH; ++i) {
-        writeColumn(font8x8_0_9[tailDigit][i], color);
-    }
-    writeBlankColumn();
-    writeBlankColumn();
-    for (int i = 0; i < KMH_WIDTH; ++i) {
-        writeColumn(kmh_sign[i], kmhColor);
     }
 }
 
 void writeSpeed(unsigned int kmh) {
-    kmh = 10;
     clearFrame();
     if (kmh < 3) {
-        for (int i = 0; i < (256 + 36) / 37; ++i) {
-            for (int j = 0; j < 36; ++j) {
-                put_pixel(0); //todo DMA
-            }
-            put_pixel(COLOR_STALL);//todo DMA
-        }
+        savePixel(7, 4, COLOR_STALL);
+        savePixel(11, 2, COLOR_STALL);
+        savePixel(15, 6, COLOR_STALL);
+        savePixel(20, 1, COLOR_STALL);
+        savePixel(24, 7, COLOR_STALL);
+        savePixel(28, 3, COLOR_STALL);
     } else {
         uint32_t color = COLOR_FAST;
         uint32_t kmhColor = COLOR_FAST_DARK;
@@ -257,7 +210,17 @@ void writeSpeed(unsigned int kmh) {
             color = COLOR_MODERATE;
             kmhColor = COLOR_MODERATE_DARK;
         }
-        writeDigits((kmh / 10) % 10, kmh % 10, color, kmhColor);
+        clearFrame();
+        if ((kmh / 10) % 10 > 0) {
+            writeDigit(0, (kmh / 10) % 10, color);
+        }
+        writeDigit(9, kmh % 10, color);
+        for (int i = 0, mask = 0x1000; i < 14; ++i, mask >>= 1) {
+            for (int j = 0; j < 8; ++j) {
+                if (kmh13x8[j] & mask)
+                    savePixel(18 + i, j, kmhColor);
+            }
+        }
     }
     showFrame();
 }
@@ -267,9 +230,9 @@ _Noreturn void led_task(void *params) {
     initPanel();
     while (1) {
         xTaskNotifyWait(0, 0, NULL, 0xFFFFFFFF);
-        if(xSemaphoreTake(gpsDataMutex, 5000)) {
+        if (xSemaphoreTake(gpsDataMutex, 5000)) {
 
-            writeSpeed(gpsDataXchange.speedKts * 10.0 /*remove*/ + 0.5 );
+            writeSpeed(lround(gpsDataXchange.speedKts * 1.852));
             xSemaphoreGive(gpsDataMutex);
         }
     }

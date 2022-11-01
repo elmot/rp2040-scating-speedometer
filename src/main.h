@@ -4,6 +4,7 @@
 
 #ifndef RP2040_SKATING_SPEEDOMETER_MAIN_H
 #define RP2040_SKATING_SPEEDOMETER_MAIN_H
+#include <math.h>
 #include "FreeRTOS.h"
 #include "task.h"
 #include "semphr.h"
