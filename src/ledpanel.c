@@ -9,7 +9,9 @@
 #define DMA_CHANNEL 0
 #define DMA_CHANNEL_MASK (1u << DMA_CHANNEL)
 
-const uint8_t font8x8_0_9[10][8] =
+#define WAVE_SIGN_INDEX (10)
+
+const uint8_t font8x8_0_9[11][8] =
         {{
                  0b01111110,
                  0b11000011,
@@ -109,6 +111,16 @@ const uint8_t font8x8_0_9[10][8] =
                  0b00000011,
                  0b11000011,
                  0b01111110,
+         },
+         {
+                 0b00110000,
+                 0b01000000,
+                 0b10000000,
+                 0b10000000,
+                 0b10000000,
+                 0b10000000,
+                 0b01000000,
+                 0b0011000,
          }};
 
 const uint32_t kmh13x8[8] = {
@@ -121,6 +133,7 @@ const uint32_t kmh13x8[8] = {
         0b1010101010101,
         0b1010101010101,
 };
+
 enum { //GRB
     COLOR_WAIT_SATELLITE = 0x008060,
     COLOR_WAIT_POSITION = 0x608000,
@@ -135,6 +148,8 @@ enum { //GRB
 
 #define PIX_BUFFER_SIZE (8 * 32)
 static uint32_t pixBuffer[PIX_BUFFER_SIZE];
+static int waveIndex = 0;
+static TickType_t waveIndexLastChanged = 0;
 
 void initDma() {
     dma_claim_mask(DMA_CHANNEL_MASK);
@@ -192,7 +207,6 @@ static void writeDigit(uint8_t x, uint8_t digit, uint32_t color) {
 }
 
 void writeSpeed(unsigned int kmh) {
-    clearFrame();
     if (kmh < 3) {
         savePixel(7, 4, COLOR_STALL);
         savePixel(11, 2, COLOR_STALL);
@@ -222,7 +236,6 @@ void writeSpeed(unsigned int kmh) {
             }
         }
     }
-    showFrame();
 }
 
 _Noreturn void led_task(void *params) {
@@ -231,9 +244,20 @@ _Noreturn void led_task(void *params) {
     while (1) {
         xTaskNotifyWait(0, 0, NULL, 0xFFFFFFFF);
         if (xSemaphoreTake(gpsDataMutex, 5000)) {
-
-            writeSpeed(lround(gpsDataXchange.speedKts * 1.852));
+            clearFrame();
+            if (gpsDataXchange.valid) {
+                writeSpeed(lround(gpsDataXchange.speedKts * 1.852));
+            } else {
+                TickType_t time = xTaskGetTickCount();
+                if (time - waveIndexLastChanged > 250) {
+                    waveIndex = (waveIndex + 7) % 24;
+                    waveIndexLastChanged = time;
+                }
+                uint32_t color = gpsDataXchange.validTime ? COLOR_WAIT_POSITION : COLOR_WAIT_SATELLITE;
+                writeDigit(waveIndex, WAVE_SIGN_INDEX, color);
+            }
             xSemaphoreGive(gpsDataMutex);
+            showFrame();
         }
     }
 }
