@@ -8,3 +8,8 @@ Components:
  * MCU: Pimoroni TINY 2040 8Mb. Can be replaced with Raspberry Pi Pico.
  * 1 Cell LiPo battery
  * 1 Shottky diode (virtually any type)
+
+Schematics:
+---
+
+[Powerbank variant](KiCAD/skating-speedometer.pdf)
